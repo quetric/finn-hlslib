@@ -196,8 +196,6 @@ void ConvolutionInputGenerator(
  * \tparam PE      			L0_PE 	   from config.h file. Number of PEs.
  * \tparam TSrcI   			DataType of the input activation (as used in the MAC)
  */
-
-
 template<
 		unsigned int 	MatrixW,		
 		unsigned int 	MatrixH,		
