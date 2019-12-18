@@ -44,6 +44,7 @@
  *  Sliding window generator for convolutions
  *
  *****************************************************************************/
+#include "interpret.hpp"
 
 #ifndef SLIDINGWINDOW_H
 #define SLIDINGWINDOW_H
