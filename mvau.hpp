@@ -224,39 +224,40 @@ void Matrix_Vector_PE_Batch(
 	unsigned const  SF = MatrixW / SIMD;
 
 	// Accumulator = output value of this function, forwarded to the activation unit
-	TO	    accu;
+	TO	    accu =(TO) 0;;
 
-	unsigned  sf   = 0;
 
 	// param stream
 	TW wgt;
 
-	// everything merged into a common iteration space (one "big" loop instead
-	// of smaller nested loops) to get the pipelinening the way we want
-	unsigned const TOTAL_FOLD =  SF;
-
-	for(unsigned  i = 0; i < SF; i++) {
+	for(unsigned  sf = 0; sf < SF; sf++) {
 #pragma HLS PIPELINE II=1
 		TI  inElem;
 		inElem = in.read();
+		//std::cout<<"For sf= "<<sf<<" InElem is: "<<std::hex<<inElem;
 		
-		// Threshold Initialisation
-		if(sf == 0)
-			accu =(TO) 0;
-
 		// compute matrix-vector product for each processing element
 		// read from the parameter stream
-		TW W_packed = weights.read();
-		wgt = W_packed & (((ap_uint<1+TW::width>)1 << (TW::width)) - 1);
-
+		TW wgt = weights.read();
+		//wgt = W_packed & (((ap_uint<1+TW::width>)1 << (TW::width)) - 1);
+		auto const  wgt_format = TWeightI()(wgt);
 		auto const  act = TSrcI()(inElem);
-		accu = mac<SIMD>(accu, wgt, act, r);
+		//std::cout<<"For sf= "<<sf<<" Upacked weights 0 is: "<<std::hex<<wgt_format[0]<<"\n";
+		//std::cout<<"For sf= "<<sf<<" Upacked weights 1 is: "<<std::hex<<wgt_format[1]<<"\n";
+		//std::cout<<"For sf= "<<sf<<" Upacked weights 2 is: "<<std::hex<<wgt_format[2]<<"\n";
+		//std::cout<<"For sf= "<<sf<<" Upacked in 0 is: "<<std::hex<<act[0]<<"\n";
+		//std::cout<<"For sf= "<<sf<<" Upacked in 1 is: "<<std::hex<<act[1]<<"\n";
+		//std::cout<<"For sf= "<<sf<<" Upacked in 2 is: "<<std::hex<<act[2]<<"\n";
+		//temp = accu.to_float();
+		//std::cout<<" Accu before: "<<temp<<"\n";
+		accu = mac<SIMD>(accu, wgt_format, act, r);
+		//temp = accu.to_float();
+		//std::cout<<" Accu after: "<<temp<<"\n";
 		// keep track of which folded synapse/neuron we are processing
-		if(++sf == SF) {
+		if(sf == (SF-1)) {
 		  // produce output and clear accumulators
 		  out.write(accu);
 		  // next folded neuron or image
-		  sf = 0;
 		}
 	}
 }
